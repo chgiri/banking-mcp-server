@@ -1,12 +1,12 @@
 # Banking MCP Server
 
-A standalone Model Context Protocol (MCP) server that exposes the [Banking FAQ Assistant](../banking-faq-assistant)'s capabilities — FAQ grounding, per-document Q&A, and document upload — to any MCP-compatible AI client (Claude Desktop, Claude Code, MCP Inspector, or a future custom agent).
+A standalone Model Context Protocol (MCP) server that exposes the [Banking AI Agent](../banking-ai-agent)'s capabilities — FAQ grounding, per-document Q&A, and document upload — to any MCP-compatible AI client (Claude Desktop, Claude Code, MCP Inspector, or a future custom agent).
 
 Built as a deliberately separate project from the banking assistant it wraps, calling it over its existing REST API rather than reaching into its internal Spring beans — the same way you'd wrap a real production service you didn't write yourself, or one written in a different stack entirely.
 
 ## What It Does
 
-Exposes three MCP tools, each a thin wrapper around an existing REST endpoint on the Banking FAQ Assistant:
+Exposes three MCP tools, each a thin wrapper around an existing REST endpoint on the Banking AI Agent:
 
 | MCP Tool | Wraps | Purpose |
 |---|---|---|
@@ -16,7 +16,7 @@ Exposes three MCP tools, each a thin wrapper around an existing REST endpoint on
 
 ## Why a Separate Repository
 
-The MCP tools here don't call `RagChatService` or `DocumentQnaService` directly as Java beans — they make real HTTP calls to `banking-faq-assistant`'s existing REST API. This is intentional: the point of MCP is exposing *existing* services to AI clients, potentially services you don't own or that run in a different stack entirely. Co-locating the MCP server inside the app it wraps would have been a shortcut that only works because this project happens to own both sides — not a realistic pattern to demonstrate.
+The MCP tools here don't call `RagChatService` or `DocumentQnaService` directly as Java beans — they make real HTTP calls to `banking-ai-agent`'s existing REST API. This is intentional: the point of MCP is exposing *existing* services to AI clients, potentially services you don't own or that run in a different stack entirely. Co-locating the MCP server inside the app it wraps would have been a shortcut that only works because this project happens to own both sides — not a realistic pattern to demonstrate.
 
 ## Tech Stack
 
@@ -49,7 +49,7 @@ The MCP tools here don't call `RagChatService` or `DocumentQnaService` directly 
                              │  HTTP calls
                              ▼
                   ┌──────────────────────┐
-                  │ banking-faq-assistant│  (port 8080)
+                  │ banking-ai-agent     │  (port 8080)
                   │  /api/chat           │
                   │  /api/documents/*    │
                   └──────────────────────┘
@@ -62,21 +62,21 @@ An MCP client calls a tool over Streamable HTTP → Spring AI routes it to the m
 ### Prerequisites
 
 - Java 21, Maven
-- The [`banking-faq-assistant`](../banking-faq-assistant) project running on port 8080 (this server has nothing to expose without it)
+- The [`banking-ai-agent`](../banking-ai-agent) project running on port 8080 (this server has nothing to expose without it)
 
 ### 1. Configure environment variables
 
 ```
-ADMIN_API_KEY=<same value as banking-faq-assistant's .env>
+ADMIN_API_KEY=<same value as banking-ai-agent's .env>
 ```
 
-Must match the key `banking-faq-assistant` expects on its admin/upload endpoints, since `uploadDocument` calls through to a protected endpoint there.
+Must match the key `banking-ai-agent` expects on its admin/upload endpoints, since `uploadDocument` calls through to a protected endpoint there.
 
 ### 2. Run both apps
 
 ```bash
 # Terminal 1 — the app being wrapped, port 8080
-cd banking-faq-assistant
+cd banking-ai-agent
 mvn spring-boot:run
 
 # Terminal 2 — this MCP server, port 8081
@@ -138,9 +138,9 @@ Paste the output into the `base64Content` field in Inspector's web UI alongside 
 - **No upload-size handling or validation beyond what the wrapped app already does.** Large files will hit the Base64/CLI limitations described above before they hit any application-level validation.
 - **Shares the same admin API key as the wrapped app**, rather than having its own independent authentication layer for MCP clients. Acceptable for a portfolio project; a production deployment would likely want MCP-level auth (e.g., bearer tokens per client) independent of the wrapped app's own admin key.
 
-## Relationship to `banking-faq-assistant`
+## Relationship to `banking-ai-agent`
 
-This project has no value without `banking-faq-assistant` running alongside it — it is a protocol adapter, not a standalone service. See that project's own README for the underlying RAG, document Q&A, and banking actions implementation this server exposes.
+This project has no value without `banking-ai-agent` running alongside it — it is a protocol adapter, not a standalone service. See that project's own README for the underlying RAG, document Q&A, and banking actions implementation this server exposes.
 
 ## What's Next
 
